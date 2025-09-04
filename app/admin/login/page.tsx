@@ -1,63 +1,55 @@
-"use server"
+"use client"
 
-import { apiClient } from "@/lib/apiClient"
+import { useState } from "react"
+import { createOrder } from "@/app/actions/orderActions"
 
-export async function createOrder(formData: FormData) {
-  try {
-    const orderData = {
-      customer: {
-        firstName: formData.get("firstName"),
-        lastName: formData.get("lastName"),
-        email: formData.get("email"),
-        phone: formData.get("phone"),
-      },
-      address: {
-        street: formData.get("address"),
-        city: formData.get("city"),
-        zipCode: formData.get("zipCode"),
-      },
-      items: JSON.parse(formData.get("items") as string),
-      total: Number.parseFloat(formData.get("total") as string),
-      type: formData.get("orderType"),
-      paymentMethod: formData.get("paymentMethod"),
-      deliveryInstructions: formData.get("instructions"),
+export default function LoginPage() {
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState("")
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const result = await createOrder(formData)
+
+    if (result.success) {
+      setMessage(`✅ Order created! ID: ${result.order.id}`)
+    } else {
+      setMessage("❌ Failed to create order")
     }
 
-    const result = await apiClient.createOrder(orderData)
-
-    // Send order confirmation notification
-    await apiClient.sendNotification({
-      type: "email",
-      recipient: orderData.customer.email,
-      orderId: result.order.id,
-      message: `Your order ${result.order.id} has been confirmed and is being prepared.`,
-    })
-
-    return { success: true, order: result.order }
-  } catch (error) {
-    console.error("Failed to create order:", error)
-    return { success: false, error: "Failed to create order" }
+    setLoading(false)
   }
-}
 
-export async function updateOrderStatus(orderId: string, status: string) {
-  try {
-    const result = await apiClient.updateOrderStatus(orderId, status)
+  return (
+    <div className="max-w-md mx-auto mt-10 p-6 border rounded-lg shadow">
+      <h1 className="text-2xl font-bold mb-4">Admin Login / Create Order</h1>
 
-    // Send status update notification
-    const order = await apiClient.getOrder(orderId)
-    if (order.success) {
-      await apiClient.sendNotification({
-        type: "sms",
-        recipient: order.order.customer.phone,
-        orderId,
-        message: `Your order ${orderId} is now ${status}.`,
-      })
-    }
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input name="firstName" placeholder="First Name" className="w-full border p-2 rounded" />
+        <input name="lastName" placeholder="Last Name" className="w-full border p-2 rounded" />
+        <input name="email" placeholder="Email" className="w-full border p-2 rounded" />
+        <input name="phone" placeholder="Phone" className="w-full border p-2 rounded" />
+        <input name="address" placeholder="Address" className="w-full border p-2 rounded" />
+        <input name="city" placeholder="City" className="w-full border p-2 rounded" />
+        <input name="zipCode" placeholder="Zip Code" className="w-full border p-2 rounded" />
 
-    return { success: true, order: result.order }
-  } catch (error) {
-    console.error("Failed to update order status:", error)
-    return { success: false, error: "Failed to update order status" }
-  }
+        {/* hidden values for demo */}
+        <input type="hidden" name="items" value={JSON.stringify([{ id: "1", name: "Pizza", qty: 2 }])} />
+        <input type="hidden" name="total" value="20.5" />
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600"
+        >
+          {loading ? "Creating..." : "Create Order"}
+        </button>
+      </form>
+
+      {message && <p className="mt-4 text-center">{message}</p>}
+    </div>
+  )
 }

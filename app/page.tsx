@@ -9,6 +9,8 @@ import { CartSheet } from "@/components/cartSheet"
 import { AddToCartButton } from "@/components/addToCart"
 import { UserMenu } from "@/components/userMenu"
 import { AddDealToCartButton } from "@/components/addDeal"
+import { createOrder, updateOrderStatus } from "@/app/actions/orderActions"
+
 
 export default function HomePage() {
   const [showFullMenu, setShowFullMenu] = useState(false)
