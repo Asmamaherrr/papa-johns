@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,13 +11,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { useCart } from "@/lib/cartContext"
 import { apiClient } from "@/lib/apiClient"
+import { useAuth } from "@/lib/authContext"   
 import { ArrowLeft, CreditCard, Truck, Clock } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export default function CheckoutPage() {
-  const { state, dispatch } = useCart()
+  const { state: cartState, dispatch } = useCart()
+  const { state: authState } = useAuth()   
   const router = useRouter()
+
   const [orderType, setOrderType] = useState("delivery")
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -34,8 +37,8 @@ export default function CheckoutPage() {
   })
 
   const deliveryFee = orderType === "delivery" ? 2.99 : 0
-  const tax = (state.total + deliveryFee) * 0.08
-  const finalTotal = state.total + deliveryFee + tax
+  const tax = (cartState.total + deliveryFee) * 0.08
+  const finalTotal = cartState.total + deliveryFee + tax
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({
@@ -49,6 +52,13 @@ export default function CheckoutPage() {
     setIsSubmitting(true)
 
     try {
+      if (!authState.isAuthenticated || !authState.user) {
+        alert("You must be logged in to place an order.")
+        router.push("/login")
+        setIsSubmitting(false)
+        return
+      }
+
       const result = await apiClient.createOrder({
         customer: {
           firstName: formData.firstName,
@@ -64,7 +74,7 @@ export default function CheckoutPage() {
                 zipCode: formData.zipCode,
               }
             : null,
-        items: state.items,
+        items: cartState.items,
         total: finalTotal,
         type: orderType,
         paymentMethod,
@@ -85,21 +95,11 @@ export default function CheckoutPage() {
     }
   }
 
-  if (state.items.length === 0) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
-            <p className="text-muted-foreground mb-6">Add some items to your cart before checking out.</p>
-            <Link href="/">
-              <Button>Continue Shopping</Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
+  useEffect(() => {
+  if (!authState.isAuthenticated) {
+    router.push("/login")
   }
+}, [authState.isAuthenticated, router])
 
   return (
     <div className="min-h-screen bg-background">
@@ -288,7 +288,7 @@ export default function CheckoutPage() {
                   <CardTitle>Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {state.items.map((item) => (
+                  {cartState.items.map((item) => (
                     <div key={item.id} className="flex justify-between items-center">
                       <div className="flex items-center space-x-3">
                         <img
@@ -310,7 +310,7 @@ export default function CheckoutPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
-                      <span>${state.total.toFixed(2)}</span>
+                      <span>${cartState.total.toFixed(2)}</span>
                     </div>
                     {orderType === "delivery" && (
                       <div className="flex justify-between">

@@ -185,8 +185,9 @@ export default function HomePage() {
   const deals = [
     {
       id: 1,
-      title: "Family Deal",
+      title: "FAMILY DEAL",
       description: "2 Large Pizzas + 2 Sides + 2L Drink",
+      image: "/OIP (1).webp",
       originalPrice: 45.99,
       dealPrice: 29.99,
       savings: 16.0,
@@ -195,8 +196,9 @@ export default function HomePage() {
     },
     {
       id: 2,
-      title: "Student Special",
+      title: "STUDENT SPECIAL",
       description: "Large Pizza + Garlic Knots + Drink",
+      image: "/OIP.webp",
       originalPrice: 24.99,
       dealPrice: 16.99,
       savings: 8.0,
@@ -205,8 +207,9 @@ export default function HomePage() {
     },
     {
       id: 3,
-      title: "Weekend Warriors",
+      title: "EVERYDAY TRIO",
       description: "3 Large Pizzas for the price of 2",
+      image: "/OIP (2).webp",
       originalPrice: 38.97,
       dealPrice: 25.98,
       savings: 12.99,
@@ -221,7 +224,7 @@ export default function HomePage() {
       name: "Downtown Location",
       address: "123 Main Street, Downtown",
       phone: "(555) 123-7272",
-      hours: "Mon-Thu: 11AM-11PM, Fri-Sat: 11AM-12AM, Sun: 12PM-10PM",
+      hours: "Mon-Thu: 11AM-11PM",
       features: ["Dine-in", "Delivery", "Pickup"],
     },
     {
@@ -237,7 +240,7 @@ export default function HomePage() {
       name: "Westside Plaza",
       address: "789 West Boulevard, Westside",
       phone: "(555) 789-7272",
-      hours: "Mon-Thu: 11AM-10PM, Fri-Sat: 11AM-11PM, Sun: 12PM-9PM",
+      hours: "Mon-Thu: 11AM-10PM",
       features: ["Family Friendly", "Delivery", "Pickup"],
     },
   ]
@@ -271,7 +274,7 @@ export default function HomePage() {
 
           <div className="flex items-center space-x-3">
             <CartSheet />
-            <Button variant="outline" size="sm" className="hover:bg-yellow-400">
+            <Button variant="outline" size="sm" className="hidden sm:flex hover:bg-yellow-400">
               <Phone className="w-4 h-4 mr-2" />
               Order Now
             </Button>
@@ -352,12 +355,19 @@ export default function HomePage() {
                 key={deal.id}
                 className="relative overflow-hidden group hover:shadow-lg transition-all duration-300"
               >
-                {deal.popular && (
+                <div className="relative overflow-hidden">
+                        <img
+                          src={deal.image || "/placeholder.svg"}
+                          alt={deal.title}
+                          className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        {deal.popular && (
                   <Badge className="absolute top-4 right-4 bg-yellow-400 text-black z-10">
                     <Gift className="w-3 h-3 mr-1" />
                     Popular
                   </Badge>
                 )}
+                      </div>
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl text-balance">{deal.title}</CardTitle>
                   <CardDescription className="text-pretty">{deal.description}</CardDescription>
